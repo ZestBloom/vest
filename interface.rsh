@@ -2,97 +2,27 @@
 "use strict";
 // -----------------------------------------------
 // Name: KINN Vest
-// Version: 0.1.0 - vest initial
+// Version: 0.1.1 - use vest
 // Requires Reach v0.1.11-rc7 (27cb9643) or later
 // ----------------------------------------------
 
 import {
-  State as BaseState,
-  Params as BaseParams,
-  TokenState,
   view,
   baseState,
   baseEvents,
-  Triple,
-  fState,
   max,
   min
 } from "@KinnFoundation/base#base-v0.1.11r15:interface.rsh";
 
+import {
+  State,
+  Params,
+  api
+} from "@KinnFoundation/vest#vest-v0.1.11r0:interface.rsh";
+
 // CONSTANTS
 
 const SERIAL_VER = 0;
-
-// TYPES
-
-export const VestingState = Struct([
-  ["tokenSupply", UInt],
-  ["who", Address],
-  ["withdraws", UInt],
-  ["terrain", Triple(UInt)],
-  ["frozen", Bool],
-  ["lastConcensusTime", UInt],
-  ["vestUnit", UInt],
-  ["vestPeriod", UInt],
-  ["managerEnabled", Bool],
-  ["recipientEnabled", Bool],
-  ["delegateEnabled", Bool],
-  ["anybodyEnabled", Bool],
-]);
-
-export const State = Struct([
-  ...Struct.fields(BaseState),
-  ...Struct.fields(TokenState),
-  ...Struct.fields(VestingState),
-]);
-
-export const VestingParams = Object({
-  tokenAmount: UInt, // amount of tokens to vest
-  recipientAddr: Address, // address of the recipient
-  delegateAddr: Address, // address of the delegate
-  cliffTime: UInt, // cliff network seconds
-  vestTime: UInt, // vesting network seconds
-  vestPeriod: UInt, // vesting minimum period
-  vestMultiplierD: UInt, // vesting multiplier (delegate)
-  vestMultiplierA: UInt, // vesting multiplier (anybody)
-  defaultFrozen: Bool, // default frozen
-  managerEnabled: Bool, // manager enabled
-  recipientEnabled: Bool, // recipient enabled
-  delegateEnabled: Bool, // delegate enabled
-  anybodyEnabled: Bool, // anybody enabled
-});
-
-export const Params = Object({
-  ...Object.fields(BaseParams),
-  ...Object.fields(VestingParams),
-});
-
-// FUN
-
-const fTouch = Fun([], Null);
-const fToggle = Fun([], Null);
-const fCancel = Fun([], Null);
-const fWithdraw = Fun([], Null);
-const fDelegateWidthdraw = Fun([], Null);
-const fAnybodyWithdraw = Fun([], Null);
-
-// REMOTE FUN
-
-export const rState = (ctc, State) => {
-  const r = remote(ctc, { state: fState(State) });
-  return r.state();
-};
-
-// API
-
-const api = {
-  touch: fTouch,
-  toggle: fToggle,
-  cancel: fCancel,
-  withdraw: fWithdraw,
-  delegateWithdraw: fDelegateWidthdraw,
-  anybodyWithdraw: fAnybodyWithdraw,
-};
 
 // CONTRACT
 
@@ -101,8 +31,7 @@ export const Participants = () => [
   Participant("Manager", {
     getParams: Fun([], Params),
   }),
-  Participant("Relay", {}),
-  Participant("Eve", {}),
+  Participant("Relay", {})
 ];
 export const Views = () => [View(view(State))];
 export const Api = () => [API(api)];
@@ -110,7 +39,7 @@ export const App = (map) => {
   const [
     { amt, ttl, tok0: token },
     [addr, _],
-    [Manager, Relay, _],
+    [Manager, Relay],
     [v],
     [a],
     [e],
